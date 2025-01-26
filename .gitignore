@@ -1,0 +1,26 @@
+# Go binaries
+/bin/
+/obj/
+/build/
+
+# Go modules
+/vendor/
+
+# Executables
+*.exe
+*.out
+*.test
+*.so
+
+# Temporary files
+*.tmp
+*.log
+/tmp/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+
+# Environment variables
+.env
