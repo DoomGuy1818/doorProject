@@ -1,0 +1,17 @@
+networks:
+  backend-network:
+    external: true
+    name: backend-network
+
+services:
+  app:
+
+    build: ../../doorProject
+    container_name: go-api
+    logging:
+      driver:
+        "json-file"
+    ports:
+      - 9991:9991
+    networks:
+      - backend-network
