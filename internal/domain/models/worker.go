@@ -1,36 +1,11 @@
 package models
 
+import "gorm.io/gorm"
+
 type Worker struct {
-	id       string
-	name     string
-	password string
-	login    string
-}
-
-func (w Worker) GetId() string {
-	return w.id
-}
-
-func (w Worker) GetName() string {
-	return w.name
-}
-
-func (w Worker) GetPassword() string {
-	return w.password
-}
-
-func (w Worker) GetLogin() string {
-	return w.login
-}
-
-func (w Worker) SetName(name string) {
-	w.name = name
-}
-
-func (w Worker) SetPassword(password string) {
-	w.password = password
-}
-
-func (w Worker) SetLogin(login string) {
-	w.login = login
+	gorm.Model
+	Name     string  `json:"name" validate:"required"`
+	Password string  `json:"password" validate:"required"`
+	Login    string  `json:"login" validate:"required"`
+	Orders   []Order `gorm:"many2many:worker_orders"`
 }
