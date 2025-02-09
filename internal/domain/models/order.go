@@ -1,47 +1,16 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type Order struct {
-	id              string
-	title           string
-	isCanSendNotify bool
-	dateStart       time.Time
-	dateEnd         time.Time
-}
-
-func (o Order) GetId() string {
-	return o.id
-}
-
-func (o Order) GetName() string {
-	return o.title
-}
-
-func (o Order) GetIsCanSendNotify() bool {
-	return o.isCanSendNotify
-}
-
-func (o Order) GetDateStart() time.Time {
-	return o.dateStart
-}
-
-func (o Order) GetDateEnd() time.Time {
-	return o.dateEnd
-}
-
-func (o Order) SetName(name string) {
-	o.title = name
-}
-
-func (o Order) SetIsCanSendNotify(isCanSendNotify bool) {
-	o.isCanSendNotify = isCanSendNotify
-}
-
-func (o Order) SetDateStart(dateStart time.Time) {
-	o.dateStart = dateStart
-}
-
-func (o Order) SetDateEnd(dateEnd time.Time) {
-	o.dateEnd = dateEnd
+	gorm.Model
+	Title           string    `json:"title" validate:"required"`
+	IsCanSendNotify bool      `json:"is_can_send_notify" default:"false"`
+	DateStart       time.Time `json:"date_start" validate:"required"`
+	DateEnd         time.Time `json:"date_end" validate:"required"`
+	Workers         []Worker  `gorm:"many2many:order_workers"`
 }

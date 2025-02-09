@@ -1,18 +1,9 @@
 package models
 
+import "gorm.io/gorm"
+
 type Category struct {
-	id    string
-	title string
-}
-
-func (c Category) GetId() string {
-	return c.id
-}
-
-func (c Category) GetName() string {
-	return c.title
-}
-
-func (c Category) SetCategory(category string) {
-	c.title = category
+	gorm.Model
+	Title    string    `json:"name"`
+	Products []Product `json:"products"`
 }
