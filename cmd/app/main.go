@@ -1,21 +1,7 @@
 package main
 
-import (
-	"doorProject/internal/config/configs"
-	"doorProject/internal/db"
-	"doorProject/internal/server"
-	"log"
-)
+import "doorProject/internal/app"
 
 func main() {
-	client, err := db.GetDBClient()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var config configs.DatabaseConfig
-	config.SetupDb(client)
-
-	go server.Start()
-	select {}
+	app.Init()
 }
