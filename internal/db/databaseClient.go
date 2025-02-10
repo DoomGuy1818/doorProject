@@ -1,25 +1,20 @@
 package db
 
 import (
-	"log"
-	"os"
-
-	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-func getDsn() string {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	return os.Getenv("DB_URL")
+type DatabaseClient struct {
+	dsn string
 }
 
-func GetDBClient() (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(getDsn()), &gorm.Config{})
+func NewDatabaseClient(dsn string) *DatabaseClient {
+	return &DatabaseClient{dsn: dsn}
+}
+
+func (d DatabaseClient) GetDBClient() (*gorm.DB, error) {
+	db, err := gorm.Open(postgres.Open(d.dsn), &gorm.Config{})
 
 	if err != nil {
 		return nil, err
