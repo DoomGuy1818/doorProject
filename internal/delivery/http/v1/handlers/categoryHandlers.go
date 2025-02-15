@@ -10,23 +10,22 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type СolorHandler struct {
-	service   service.ColorService
+type CategoryHandler struct {
+	service   service.CategoryService
 	validator *validator.Validate
 }
 
-func NewColorHandler(colorService *service.ColorService, v *validator.Validate) *СolorHandler {
-	return &СolorHandler{
-		service:   *colorService,
+func NewCategoryHandler(s *service.CategoryService, v *validator.Validate) *CategoryHandler {
+	return &CategoryHandler{
+		service:   *s,
 		validator: v,
 	}
 }
 
-func (h *СolorHandler) CreateColor(ctx echo.Context) error {
-	c := new(models.Color)
-
+func (h *CategoryHandler) CreateCategory(ctx echo.Context) error {
+	c := new(models.Category)
 	if err := ctx.Bind(c); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ctx.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	if err := h.validator.Struct(c); err != nil {
@@ -35,8 +34,8 @@ func (h *СolorHandler) CreateColor(ctx echo.Context) error {
 		}
 	}
 
-	if err := h.service.CreateColor(c); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	if err := h.service.CreateCategory(c); err != nil {
+		return ctx.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	return ctx.JSON(http.StatusCreated, c)

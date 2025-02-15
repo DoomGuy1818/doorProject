@@ -7,20 +7,28 @@ import (
 )
 
 type Routes struct {
-	echo    *echo.Echo
-	product *routes.ProductRoute
-	color   *routes.ColorRoutes
+	echo     *echo.Echo
+	product  *routes.ProductRoute
+	color    *routes.ColorRoutes
+	category *routes.CategoryRoute
 }
 
-func NewRoutes(p *routes.ProductRoute, c *routes.ColorRoutes, echo *echo.Echo) *Routes {
+func NewRoutes(
+	p *routes.ProductRoute,
+	c *routes.ColorRoutes,
+	cat *routes.CategoryRoute,
+	echo *echo.Echo,
+) *Routes {
 	return &Routes{
-		echo:    echo,
-		product: p,
-		color:   c,
+		echo:     echo,
+		product:  p,
+		color:    c,
+		category: cat,
 	}
 }
 
 func (r *Routes) InitRoutes() {
 	r.product.CreateProduct(r.echo)
 	r.color.CreateColor(r.echo)
+	r.category.CreateCategory(r.echo)
 }
