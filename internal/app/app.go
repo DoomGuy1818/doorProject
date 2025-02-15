@@ -27,18 +27,23 @@ func Init() {
 
 	dbClient := db.NewDatabaseClient(dsn)
 	configuredDB := configs.NewDatabaseConfig(dbClient.GetDBClient())
-	productRepository := psqlRepository.NewProductRepository(configuredDB.Database)
-	colorRepository := psqlRepository.NewColorRepository(configuredDB.Database)
 
+	productRepository := psqlRepository.NewProductRepository(configuredDB.Database)
 	productService := service.NewProductService(productRepository)
 	productHandler := handlers.NewProductHandler(productService)
 	productRoutes := routes.NewProductRoute(productHandler)
 
+	colorRepository := psqlRepository.NewColorRepository(configuredDB.Database)
 	colorService := service.NewColorService(colorRepository)
 	colorHandler := handlers.NewColorHandler(colorService)
 	colorRoutes := routes.NewColorRoutes(colorHandler)
 
-	manyRoutes := v1.NewRoutes(productRoutes, colorRoutes, e)
+	categoryRepository := psqlRepository.NewCategoryRepository(configuredDB.Database)
+	categoryService := service.NewCategoryService(categoryRepository)
+	categoryHandler := handlers.NewCategoryHandler(categoryService)
+	categoryRoutes := routes.NewCategoryRoute(categoryHandler)
+
+	manyRoutes := v1.NewRoutes(productRoutes, colorRoutes, categoryRoutes, e)
 
 	serv := server.NewServer(manyRoutes, e)
 	serv.Start()

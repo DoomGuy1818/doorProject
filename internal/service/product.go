@@ -18,11 +18,11 @@ func NewProductService(db repository.ProductRepository) *ProductService {
 func (p ProductService) CreateProduct(dto *models.Product) error {
 	result := p.productRepository.CreateProduct(dto)
 
-	if result.Error == nil {
-		return nil
+	if result != nil {
+		return result
 	}
 
-	return result
+	return nil
 }
 
 func updateProduct(id string) error {
