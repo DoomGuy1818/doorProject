@@ -19,15 +19,15 @@ func NewColorHandler(colorService *service.ColorService) *СolorHandler {
 }
 
 func (h *СolorHandler) CreateColor(ctx echo.Context) error {
-	p := new(models.Color)
+	c := new(models.Color)
 
-	if err := ctx.Bind(p); err != nil {
+	if err := ctx.Bind(c); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	if err := h.service.CreateColor(p); err != nil {
+	if err := h.service.CreateColor(c); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	return ctx.JSON(http.StatusCreated, p)
+	return ctx.JSON(http.StatusCreated, c)
 }

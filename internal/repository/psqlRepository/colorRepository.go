@@ -11,7 +11,7 @@ type ColorRepository struct {
 }
 
 func NewColorRepository(db *gorm.DB) *ColorRepository {
-	return &ColorRepository{db}
+	return &ColorRepository{db: db}
 }
 
 func (c ColorRepository) CreateColor(color *models.Color) error {
