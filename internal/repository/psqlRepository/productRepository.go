@@ -19,7 +19,6 @@ func NewProductRepository(db *gorm.DB) *ProductRepository {
 
 func (p *ProductRepository) CreateProduct(product *models.Product) error {
 	if err := p.db.Create(product).Error; err != nil {
-		log.Println(err)
 		return err
 	}
 	return nil

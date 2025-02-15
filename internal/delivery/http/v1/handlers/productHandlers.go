@@ -3,18 +3,22 @@ package handlers
 import (
 	"doorProject/internal/domain/models"
 	"doorProject/internal/service"
+	"errors"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 )
 
 type ProductHandler struct {
-	service *service.ProductService
+	service   *service.ProductService
+	validator *validator.Validate
 }
 
-func NewProductHandler(serv *service.ProductService) *ProductHandler {
+func NewProductHandler(serv *service.ProductService, v *validator.Validate) *ProductHandler {
 	return &ProductHandler{
-		service: serv,
+		service:   serv,
+		validator: v,
 	}
 }
 
@@ -24,6 +28,12 @@ func (h ProductHandler) CreateProduct(ctx echo.Context) error {
 
 	if err := ctx.Bind(p); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if err := h.validator.Struct(p); err != nil {
+		if errors.As(err, &validator.ValidationErrors{}) {
+			return ctx.JSON(http.StatusBadRequest, err.Error())
+		}
 	}
 
 	if err := h.service.CreateProduct(p); err != nil {
