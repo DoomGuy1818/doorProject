@@ -29,6 +29,7 @@ func Init() {
 
 	dbClient := db.NewDatabaseClient(dsn)
 	configuredDB := configs.NewDatabaseConfig(dbClient.GetDBClient())
+	configuredDB.SetupDb()
 
 	productRepository := psqlRepository.NewProductRepository(configuredDB.Database)
 	productService := service.NewProductService(productRepository)
