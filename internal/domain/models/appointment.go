@@ -13,5 +13,10 @@ type Appointment struct {
 	Date      time.Time `gorm:"type:date;not null" json:"date"`
 	StartTime time.Time `gorm:"type:time;not null" json:"start_time"`
 	EndTime   time.Time `gorm:"type:time;not null" json:"end_time"`
-	Status    string    `json:"status" default:"true"`
+	// Статусы записи:
+	// - "" (пусто)    - запись активна
+	// - "skip"        - запись была пропущена
+	// - "served"      - клиент обслужен
+	// - "canceled"    - запись отменена
+	Status string `json:"status"`
 }

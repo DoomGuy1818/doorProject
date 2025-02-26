@@ -31,7 +31,6 @@ func (database DatabaseConfig) SetupDb() {
 		&models.Category{},
 		&models.Product{},
 		&models.WorkingTime{},
-		&models.Exception{},
 		&models.Appointment{},
 	)
 	if err != nil {
