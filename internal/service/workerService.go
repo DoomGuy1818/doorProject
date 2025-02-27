@@ -25,7 +25,7 @@ func (w WorkerService) CreateWorker(dto *dto.WorkerDTO) (*models.Worker, error) 
 	err := comparePasswordHash(passwordHash, dto.RepeatPassword)
 	if err != nil {
 		log.Fatal(err.Error())
-	}
+	} //TODO: вместо фатала, возвращать nil, err, чтобы было что выводит хендлер
 
 	worker := models.Worker{
 		Name:     dto.Name,
