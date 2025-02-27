@@ -12,4 +12,5 @@ type Service struct {
 	IsActive bool      `json:"is_active" default:"true"`
 	Price    float64   `json:"price" validate:"required"`
 	Duration time.Time `json:"duration" validate:"required"`
+	WorkerId int       `gorm:"not null" json:"worker_id" validate:"required"`
 }

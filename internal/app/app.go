@@ -46,7 +46,12 @@ func Init() {
 	categoryHandler := handlers.NewCategoryHandler(categoryService, v)
 	categoryRoutes := routes.NewCategoryRoute(categoryHandler)
 
-	manyRoutes := v1.NewRoutes(productRoutes, colorRoutes, categoryRoutes, e)
+	workerRepository := psqlRepository.NewWorkerRepository(configuredDB.Database)
+	workerService := *service.NewWorkerService(workerRepository)
+	workerHandlers := handlers.NewWorkerHandlers(workerService, *v)
+	workerRoutes := routes.NewWorkerRoutes(*workerHandlers)
+
+	manyRoutes := v1.NewRoutes(productRoutes, colorRoutes, categoryRoutes, workerRoutes, e)
 
 	serv := server.NewServer(manyRoutes, e)
 	serv.Start()
