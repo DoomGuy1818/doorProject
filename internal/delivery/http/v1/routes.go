@@ -11,12 +11,14 @@ type Routes struct {
 	product  *routes.ProductRoute
 	color    *routes.ColorRoutes
 	category *routes.CategoryRoute
+	worker   *routes.WorkerRoutes
 }
 
 func NewRoutes(
 	p *routes.ProductRoute,
 	c *routes.ColorRoutes,
 	cat *routes.CategoryRoute,
+	w *routes.WorkerRoutes,
 	echo *echo.Echo,
 ) *Routes {
 	return &Routes{
@@ -24,6 +26,7 @@ func NewRoutes(
 		product:  p,
 		color:    c,
 		category: cat,
+		worker:   w,
 	}
 }
 
@@ -31,4 +34,5 @@ func (r *Routes) InitRoutes() {
 	r.product.CreateProduct(r.echo)
 	r.color.CreateColor(r.echo)
 	r.category.CreateCategory(r.echo)
+	r.worker.CreateWorker(r.echo)
 }
