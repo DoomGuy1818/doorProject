@@ -51,7 +51,12 @@ func Init() {
 	workerHandlers := handlers.NewWorkerHandlers(workerService, *v)
 	workerRoutes := routes.NewWorkerRoutes(*workerHandlers)
 
-	manyRoutes := v1.NewRoutes(productRoutes, colorRoutes, categoryRoutes, workerRoutes, e)
+	workerCalendarRepository := psqlRepository.NewWorkerCalendarRepository(configuredDB.Database)
+	workerCalendarService := service.NewWorkerCalendar(workerCalendarRepository)
+	workerCalendarHandlers := handlers.NewWorkerCalendarHandlers(workerCalendarService, v)
+	workerCalendarRoutes := routes.NewWorkerCalendar(workerCalendarHandlers)
+
+	manyRoutes := v1.NewRoutes(productRoutes, colorRoutes, categoryRoutes, workerRoutes, workerCalendarRoutes, e)
 
 	serv := server.NewServer(manyRoutes, e)
 	serv.Start()
