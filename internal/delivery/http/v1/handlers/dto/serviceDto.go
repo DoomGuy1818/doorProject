@@ -1,16 +1,11 @@
-package models
+package dto
 
-import (
-	"time"
+import "time"
 
-	"gorm.io/gorm"
-)
-
-type Service struct {
-	gorm.Model
+type ServiceDto struct {
 	Name     string        `json:"name" validate:"required"`
 	IsActive bool          `json:"is_active" default:"true"`
 	Price    float64       `json:"price" validate:"required"`
 	Duration time.Duration `json:"duration" validate:"required"`
-	WorkerId uint          `gorm:"not null" json:"worker_id" validate:"required"`
+	WorkerId uint          `json:"worker_id" validate:"required"`
 }
