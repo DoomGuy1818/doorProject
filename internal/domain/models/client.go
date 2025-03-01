@@ -11,5 +11,4 @@ type Client struct {
 	FullName string            `json:"full_name" validate:"required"`
 	Phone    value.PhoneNumber `json:"phone" validate:"required"`
 	Email    value.Email       `json:"email" validate:"required,email"`
-	CartID   uint              `json:"cart_id"`
 }
