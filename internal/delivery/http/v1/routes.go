@@ -13,6 +13,9 @@ type Routes struct {
 	category       *routes.CategoryRoute
 	worker         *routes.WorkerRoutes
 	workerCalendar *routes.WorkerCalendar
+	client         *routes.ClientRoutes
+	service        *routes.ServiceRoutes
+	cart           *routes.CartRoutes
 }
 
 func NewRoutes(
@@ -21,6 +24,9 @@ func NewRoutes(
 	cat *routes.CategoryRoute,
 	w *routes.WorkerRoutes,
 	wc *routes.WorkerCalendar,
+	cl *routes.ClientRoutes,
+	s *routes.ServiceRoutes,
+	crt *routes.CartRoutes,
 	echo *echo.Echo,
 ) *Routes {
 	return &Routes{
@@ -30,6 +36,9 @@ func NewRoutes(
 		category:       cat,
 		worker:         w,
 		workerCalendar: wc,
+		client:         cl,
+		service:        s,
+		cart:           crt,
 	}
 }
 
@@ -39,4 +48,7 @@ func (r *Routes) InitRoutes() {
 	r.category.CreateCategory(r.echo)
 	r.worker.CreateWorker(r.echo)
 	r.workerCalendar.CreateWorkDay(r.echo)
+	r.client.CreateClient(r.echo)
+	r.service.CreateService(r.echo)
+	r.cart.CreateCart(r.echo)
 }

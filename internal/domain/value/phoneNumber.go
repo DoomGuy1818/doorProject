@@ -7,9 +7,9 @@ import (
 
 type PhoneNumber string
 
-func NewPhoneNumber(phone string) (Email, error) {
+func NewPhoneNumber(phone string) (PhoneNumber, error) {
 	if strings.HasPrefix(phone, "+7") {
-		return Email(phone), nil
+		return PhoneNumber(phone), nil
 	}
 	return "", fmt.Errorf("invalid phone number")
 }

@@ -6,16 +6,16 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type Service struct {
-	handlers *handlers.ServiceHandlers
+type ServiceRoutes struct {
+	handler *handlers.ServiceHandlers
 }
 
-func NewService(handler *handlers.ServiceHandlers) *Service {
-	return &Service{
-		handlers: handler,
+func NewServiceRoutes(handler *handlers.ServiceHandlers) *ServiceRoutes {
+	return &ServiceRoutes{
+		handler: handler,
 	}
 }
 
-func (r *Service) CreateService(echo *echo.Echo) {
-	echo.POST("/services", r.handlers.CreateService)
+func (r *ServiceRoutes) CreateService(echo *echo.Echo) {
+	echo.POST("/services", r.handler.CreateService)
 }
