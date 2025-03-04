@@ -63,7 +63,7 @@ func Init() {
 
 	serviceRepository := psqlRepository.NewServiceRepository(configuredDB.Database)
 	serviceService := service.NewServiceService(serviceRepository)
-	serviceHandler := handlers.NewServiceHandler(serviceService)
+	serviceHandler := handlers.NewServiceHandler(serviceService, v)
 	serviceRoutes := routes.NewServiceRoutes(serviceHandler)
 
 	cartRepository := psqlRepository.NewCartRepository(configuredDB.Database)
