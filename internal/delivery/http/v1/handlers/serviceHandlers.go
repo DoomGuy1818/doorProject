@@ -5,16 +5,19 @@ import (
 	"doorProject/internal/service"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 )
 
 type ServiceHandlers struct {
-	service *service.Service
+	service   *service.Service
+	validator *validator.Validate
 }
 
-func NewServiceHandler(service *service.Service) *ServiceHandlers {
+func NewServiceHandler(service *service.Service, validator *validator.Validate) *ServiceHandlers {
 	return &ServiceHandlers{
-		service: service,
+		service:   service,
+		validator: validator,
 	}
 }
 
@@ -25,7 +28,7 @@ func (h *ServiceHandlers) CreateService(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	if err := ctx.Validate(serviceDto); err != nil {
+	if err := h.validator.Struct(serviceDto); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
