@@ -16,6 +16,7 @@ type Routes struct {
 	client         *routes.ClientRoutes
 	service        *routes.ServiceRoutes
 	cart           *routes.CartRoutes
+	appointment    *routes.AppointmentRoutes
 }
 
 func NewRoutes(
@@ -27,6 +28,7 @@ func NewRoutes(
 	cl *routes.ClientRoutes,
 	s *routes.ServiceRoutes,
 	crt *routes.CartRoutes,
+	a *routes.AppointmentRoutes,
 	echo *echo.Echo,
 ) *Routes {
 	return &Routes{
@@ -39,6 +41,7 @@ func NewRoutes(
 		client:         cl,
 		service:        s,
 		cart:           crt,
+		appointment:    a,
 	}
 }
 
@@ -51,4 +54,5 @@ func (r *Routes) InitRoutes() {
 	r.client.CreateClient(r.echo)
 	r.service.CreateService(r.echo)
 	r.cart.CreateCart(r.echo)
+	r.appointment.GetFreeSlots(r.echo)
 }

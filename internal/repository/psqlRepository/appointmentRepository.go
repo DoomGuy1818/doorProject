@@ -2,6 +2,7 @@ package psqlRepository
 
 import (
 	"doorProject/internal/domain/models"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -22,4 +23,8 @@ func (a *AppointmentRepository) Create(appointment *models.Appointment) error {
 	}
 
 	return nil
+}
+
+func (a *AppointmentRepository) GetByWorkerAndDate(workerId uint, date time.Time) ([]models.Appointment, error) {
+	return nil, nil
 }

@@ -2,6 +2,7 @@ package psqlRepository
 
 import (
 	"doorProject/internal/domain/models"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -22,4 +23,8 @@ func (wc WorkerCalendarRepository) Create(workerCalendar *models.WorkerCalendar)
 	}
 
 	return nil
+}
+
+func (wc WorkerCalendarRepository) GetByWorkerAndDate(workerId uint, date time.Time) (*models.WorkerCalendar, error) {
+	return nil, nil
 }

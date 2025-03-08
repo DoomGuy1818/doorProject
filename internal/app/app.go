@@ -3,7 +3,7 @@ package app
 import (
 	"doorProject/internal/config/configs"
 	"doorProject/internal/db"
-	v1 "doorProject/internal/delivery/http/v1"
+	"doorProject/internal/delivery/http/v1"
 	"doorProject/internal/delivery/http/v1/handlers"
 	"doorProject/internal/delivery/http/v1/routes"
 	"doorProject/internal/repository/psqlRepository"
@@ -71,6 +71,16 @@ func Init() {
 	cartHandlers := handlers.NewCartHandlers(cartService, v)
 	cartRoutes := routes.NewCartRoutes(cartHandlers)
 
+	appointmentRepository := psqlRepository.NewAppointmentRepository(configuredDB.Database)
+	appointmentService := service.NewAppointmentService(
+		workerRepository,
+		workerCalendarRepository,
+		appointmentRepository,
+		54000000000,
+	)
+	appointmentHandlers := handlers.NewAppointmentHandler(appointmentService)
+	appointmentRoutes := routes.NewAppointmentRoutes(appointmentHandlers)
+
 	manyRoutes := v1.NewRoutes(
 		productRoutes,
 		colorRoutes,
@@ -80,6 +90,7 @@ func Init() {
 		clientRoutes,
 		serviceRoutes,
 		cartRoutes,
+		appointmentRoutes,
 		e,
 	)
 
