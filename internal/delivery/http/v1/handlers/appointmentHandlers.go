@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"doorProject/internal/delivery/http/v1/handlers/dto"
 	"doorProject/internal/service"
 	"net/http"
 	"strconv"
@@ -47,4 +48,24 @@ func (h *AppointmentHandler) GetFreeSlotsHandler(ctx echo.Context) error {
 	slots := h.service.GetAppointmentSlots(day, uint(workerID), uint(serviceID))
 
 	return ctx.JSON(http.StatusOK, slots)
+}
+
+func (h *AppointmentHandler) CreateAppointment(ctx echo.Context) error {
+	appointmentDto := new(dto.AppointmentDto)
+
+	if err := ctx.Bind(appointmentDto); err != nil {
+		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	if err := h.validator.Struct(appointmentDto); err != nil {
+		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	form, err := h.service.CreateAppointment(appointmentDto)
+
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return ctx.JSON(http.StatusCreated, form)
 }

@@ -17,3 +17,7 @@ func NewAppointmentRoutes(handler *handlers.AppointmentHandler) *AppointmentRout
 func (r *AppointmentRoutes) GetFreeSlots(e *echo.Echo) {
 	e.GET("/workers/:worker_id/services/:service_id/slots", r.Handler.GetFreeSlotsHandler)
 }
+
+func (r *AppointmentRoutes) CreateAppointments(e *echo.Echo) {
+	e.POST("/appointments", r.Handler.CreateAppointment)
+}
