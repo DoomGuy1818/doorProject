@@ -1,6 +1,7 @@
 package service
 
 import (
+	"doorProject/internal/delivery/http/v1/handlers/dto"
 	"doorProject/internal/domain/models"
 	"doorProject/internal/repository"
 	"log"
@@ -42,6 +43,24 @@ func (a *AppointmentService) GetAppointments(date time.Time) []models.Appointmen
 	return appointments
 }
 
+func (a *AppointmentService) CreateAppointment(dto *dto.AppointmentDto) (*models.Appointment, error) {
+	appointment := &models.Appointment{
+		WorkerID:  dto.MasterId,
+		ClientID:  dto.ClientId,
+		ServiceID: dto.ServiceId,
+		Date:      dto.Date,
+		StartTime: dto.StartTime,
+		EndTime:   dto.EndTime,
+		Status:    dto.Status,
+	}
+
+	if err := a.appointRepo.Create(appointment); err != nil {
+		return nil, err
+	}
+
+	return appointment, nil
+}
+
 func (a *AppointmentService) getWorkerCalendar(date time.Time, workerID uint) *models.WorkerCalendar {
 	workerCalendar, err := a.calendarRepo.FindCalendarByDateAndWorkerID(date, workerID)
 	if err != nil {
@@ -68,7 +87,6 @@ func (a *AppointmentService) generateSlots(
 	var slots []models.TimeSlot
 	current := workDay.WorkStart //TODO: вынести в константы или структуру, чтобы небыло магических переменных
 	step := 30 * time.Minute     //TODO: вынести в константы или структуру, чтобы небыло магических переменных
-	isValid := true              //TODO: вынести в константы или структуру, чтобы небыло магических переменных
 
 	for current.Before(workDay.WorkEnd) {
 
@@ -78,15 +96,16 @@ func (a *AppointmentService) generateSlots(
 			break
 		}
 
-		if isValid {
-			for _, appointment := range appointments {
-				if current.Before(appointment.StartTime) && current.After(appointment.EndTime) {
-					isValid = false
-				}
+		isValid := true
+
+		for _, appointment := range appointments {
+			if current.Before(appointment.EndTime) && end.After(appointment.StartTime) {
+				isValid = false
+				break
 			}
 		}
 
-		if isValid {
+		if isValid == true {
 			slots = append(slots, models.TimeSlot{Day: workDay.Day, Start: current, End: end})
 		}
 

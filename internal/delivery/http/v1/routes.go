@@ -55,4 +55,5 @@ func (r *Routes) InitRoutes() {
 	r.service.CreateService(r.echo)
 	r.cart.CreateCart(r.echo)
 	r.appointment.GetFreeSlots(r.echo)
+	r.appointment.CreateAppointments(r.echo)
 }
