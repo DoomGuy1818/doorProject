@@ -18,7 +18,7 @@ func NewCartService(repository repository.CartRepository) *CartService {
 
 func (crt *CartService) CreateCart(dto *dto.CartDto) (*models.Cart, error) {
 	cart := &models.Cart{
-		ClientId: dto.ClientId,
+		ClientID: dto.ClientId,
 		Bill:     dto.Bill,
 		Products: dto.Products,
 	}

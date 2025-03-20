@@ -8,7 +8,8 @@ import (
 
 type Client struct {
 	gorm.Model
-	FullName string            `json:"full_name" validate:"required"`
-	Phone    value.PhoneNumber `json:"phone" validate:"required"`
-	Email    value.Email       `json:"email" validate:"required,email"`
+	FullName     string            `json:"full_name" validate:"required"`
+	Phone        value.PhoneNumber `json:"phone" validate:"required"`
+	Email        value.Email       `json:"email" validate:"required"`
+	Appointments []Appointment
 }

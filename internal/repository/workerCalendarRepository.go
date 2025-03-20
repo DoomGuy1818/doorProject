@@ -7,5 +7,5 @@ import (
 
 type WorkerCalendarRepository interface {
 	Create(workerCalendar *models.WorkerCalendar) error
-	GetByWorkerAndDate(workerId uint, date time.Time) (*models.WorkerCalendar, error)
+	FindCalendarByDateAndWorkerID(date time.Time, workerID uint) (*models.WorkerCalendar, error)
 }

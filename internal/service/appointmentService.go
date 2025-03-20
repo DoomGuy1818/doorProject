@@ -3,104 +3,94 @@ package service
 import (
 	"doorProject/internal/domain/models"
 	"doorProject/internal/repository"
-	"errors"
+	"log"
 	"time"
 )
 
 type AppointmentService struct {
-	workerRepo   repository.WorkerRepositoryInterface
 	calendarRepo repository.WorkerCalendarRepository
 	appointRepo  repository.AppointmentRepository
-	slotDuration time.Duration
+	serviceRepo  repository.ServiceRepository
 }
 
 func NewAppointmentService(
-	workerRepo repository.WorkerRepositoryInterface,
 	calendarRepo repository.WorkerCalendarRepository,
 	appointRepo repository.AppointmentRepository,
-	slotDuration time.Duration,
+	serviceRepo repository.ServiceRepository,
 ) *AppointmentService {
 	return &AppointmentService{
-		workerRepo:   workerRepo,
 		calendarRepo: calendarRepo,
 		appointRepo:  appointRepo,
-		slotDuration: slotDuration,
+		serviceRepo:  serviceRepo,
 	}
 }
 
-// GetFreeSlots возвращает свободные слоты динамически
-func (s *AppointmentService) GetFreeSlots(workerID uint, date time.Time) ([]models.TimeSlot, error) {
-	// 1. Получаем рабочие часы
-	calendar, err := s.calendarRepo.GetByWorkerAndDate(workerID, date)
-	if err != nil {
-		return nil, errors.New("рабочий график не найден")
-	}
+func (a *AppointmentService) GetAppointmentSlots(date time.Time, workerID uint, serviceID uint) []models.TimeSlot {
+	appointments := a.GetAppointments(date)
+	calendar := a.getWorkerCalendar(date, workerID)
+	service := a.getService(serviceID, workerID)
 
-	// 2. Получаем существующие записи
-	appointments, err := s.appointRepo.GetByWorkerAndDate(workerID, date)
-	if err != nil {
-		return nil, errors.New("ошибка получения записей")
-	}
-
-	// 3. Генерируем слоты
-	return s.generateSlots(calendar, appointments), nil
+	return a.generateSlots(service, appointments, calendar)
 }
 
-// generateSlots создает слоты на лету
-func (s *AppointmentService) generateSlots(
-	calendar *models.WorkerCalendar,
+func (a *AppointmentService) GetAppointments(date time.Time) []models.Appointment {
+	appointments, err := a.appointRepo.FindAppointmentsByDay(date)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return appointments
+}
+
+func (a *AppointmentService) getWorkerCalendar(date time.Time, workerID uint) *models.WorkerCalendar {
+	workerCalendar, err := a.calendarRepo.FindCalendarByDateAndWorkerID(date, workerID)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return workerCalendar
+}
+
+func (a *AppointmentService) getService(serviceID uint, workerID uint) *models.Service {
+	service, err := a.serviceRepo.FindServiceByIdAndWorker(serviceID, workerID)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return service
+}
+
+func (a *AppointmentService) generateSlots(
+	service *models.Service,
 	appointments []models.Appointment,
+	workDay *models.WorkerCalendar,
 ) []models.TimeSlot {
 	var slots []models.TimeSlot
-	current := time.Date(
-		calendar.Day.Year(),
-		calendar.Day.Month(),
-		calendar.Day.Day(),
-		calendar.WorkStart.Hour(),
-		calendar.WorkStart.Minute(),
-		0, 0, time.UTC,
-	)
+	current := workDay.WorkStart //TODO: вынести в константы или структуру, чтобы небыло магических переменных
+	step := 30 * time.Minute     //TODO: вынести в константы или структуру, чтобы небыло магических переменных
+	isValid := true              //TODO: вынести в константы или структуру, чтобы небыло магических переменных
 
-	endTime := time.Date(
-		calendar.Day.Year(),
-		calendar.Day.Month(),
-		calendar.Day.Day(),
-		calendar.WorkEnd.Hour(),
-		calendar.WorkEnd.Minute(),
-		0, 0, time.UTC,
-	)
+	for current.Before(workDay.WorkEnd) {
 
-	for current.Before(endTime) {
-		slotEnd := current.Add(s.slotDuration)
+		end := current.Add(service.Duration)
 
-		if slotEnd.After(endTime) {
+		if end.After(workDay.WorkEnd) {
 			break
 		}
 
-		if s.isSlotAvailable(current, slotEnd, appointments) {
-			slots = append(
-				slots, models.TimeSlot{
-					Start: current,
-					End:   slotEnd,
-				},
-			)
+		if isValid {
+			for _, appointment := range appointments {
+				if current.Before(appointment.StartTime) && current.After(appointment.EndTime) {
+					isValid = false
+				}
+			}
 		}
 
-		current = slotEnd
-	}
+		if isValid {
+			slots = append(slots, models.TimeSlot{Day: workDay.Day, Start: current, End: end})
+		}
 
+		current = current.Add(step)
+	}
 	return slots
-}
-
-// Проверка доступности слота
-func (s *AppointmentService) isSlotAvailable(
-	start, end time.Time,
-	appointments []models.Appointment,
-) bool {
-	for _, app := range appointments {
-		if start.Before(app.EndTime) && end.After(app.StartTime) {
-			return false
-		}
-	}
-	return true
 }

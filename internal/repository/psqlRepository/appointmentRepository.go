@@ -2,6 +2,7 @@ package psqlRepository
 
 import (
 	"doorProject/internal/domain/models"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -22,4 +23,17 @@ func (a *AppointmentRepository) Create(appointment *models.Appointment) error {
 	}
 
 	return nil
+}
+
+func (a *AppointmentRepository) FindAppointmentsByDay(date time.Time) ([]models.Appointment, error) {
+	var appointments []models.Appointment
+	if err := a.db.Where(
+		models.Appointment{
+			Date: date,
+		},
+	).Find(&appointments).Error; err != nil {
+		return nil, err
+	}
+
+	return appointments, nil
 }

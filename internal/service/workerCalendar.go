@@ -20,7 +20,7 @@ func (wc *WorkerCalendar) CreateWorkDay(dto *dto.WorkerCalendarDto) (*models.Wor
 		Day:       dto.Day,
 		WorkStart: dto.WorkStart,
 		WorkEnd:   dto.WorkEnd,
-		WorkerId:  dto.WorkerId,
+		WorkerID:  dto.WorkerId,
 	}
 
 	if err := wc.repository.Create(workDay); err != nil {
