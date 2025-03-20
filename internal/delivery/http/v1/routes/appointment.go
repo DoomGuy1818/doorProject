@@ -15,5 +15,5 @@ func NewAppointmentRoutes(handler *handlers.AppointmentHandler) *AppointmentRout
 }
 
 func (r *AppointmentRoutes) GetFreeSlots(e *echo.Echo) {
-	e.GET("/worker_id/:id/slots", r.Handler.GetFreeSlots)
+	e.GET("/workers/:worker_id/services/:service_id/slots", r.Handler.GetFreeSlotsHandler)
 }

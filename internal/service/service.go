@@ -22,7 +22,7 @@ func (s Service) CreateService(dto *dto.ServiceDto) (*models.Service, error) {
 		IsActive: dto.IsActive,
 		Price:    dto.Price,
 		Duration: dto.Duration,
-		WorkerId: dto.WorkerId,
+		WorkerID: dto.WorkerId,
 	}
 
 	if err := s.repository.Create(service); err != nil {

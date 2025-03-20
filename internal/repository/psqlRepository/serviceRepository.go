@@ -22,3 +22,12 @@ func (s ServiceRepository) Create(service *models.Service) error {
 	}
 	return nil
 }
+
+func (s ServiceRepository) FindServiceByIdAndWorker(serviceID uint, workerID uint) (*models.Service, error) {
+	var service models.Service
+	if err := s.db.Where("id = ? AND worker_id = ?", serviceID, workerID).First(&service).Error; err != nil {
+		return nil, err
+	}
+
+	return &service, nil
+}

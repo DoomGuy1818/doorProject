@@ -25,6 +25,15 @@ func (a *AppointmentRepository) Create(appointment *models.Appointment) error {
 	return nil
 }
 
-func (a *AppointmentRepository) GetByWorkerAndDate(workerId uint, date time.Time) ([]models.Appointment, error) {
-	return nil, nil
+func (a *AppointmentRepository) FindAppointmentsByDay(date time.Time) ([]models.Appointment, error) {
+	var appointments []models.Appointment
+	if err := a.db.Where(
+		models.Appointment{
+			Date: date,
+		},
+	).Find(&appointments).Error; err != nil {
+		return nil, err
+	}
+
+	return appointments, nil
 }

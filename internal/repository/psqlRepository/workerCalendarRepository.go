@@ -17,7 +17,7 @@ func NewWorkerCalendarRepository(db *gorm.DB) *WorkerCalendarRepository {
 	}
 }
 
-func (wc WorkerCalendarRepository) Create(workerCalendar *models.WorkerCalendar) error {
+func (wc *WorkerCalendarRepository) Create(workerCalendar *models.WorkerCalendar) error {
 	if err := wc.database.Create(workerCalendar).Error; err != nil {
 		return err
 	}
@@ -25,6 +25,20 @@ func (wc WorkerCalendarRepository) Create(workerCalendar *models.WorkerCalendar)
 	return nil
 }
 
-func (wc WorkerCalendarRepository) GetByWorkerAndDate(workerId uint, date time.Time) (*models.WorkerCalendar, error) {
-	return nil, nil
+func (wc *WorkerCalendarRepository) FindCalendarByDateAndWorkerID(
+	date time.Time,
+	workerID uint,
+) (*models.WorkerCalendar, error) {
+	var workerCalendar *models.WorkerCalendar
+
+	err := wc.database.Where(
+		models.WorkerCalendar{
+			Day:      date,
+			WorkerID: workerID,
+		},
+	).First(&workerCalendar).Error
+	if err != nil {
+		return nil, err
+	}
+	return workerCalendar, nil
 }

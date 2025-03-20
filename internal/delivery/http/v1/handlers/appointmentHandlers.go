@@ -1,64 +1,50 @@
 package handlers
 
 import (
+	"doorProject/internal/service"
 	"net/http"
 	"strconv"
 	"time"
 
-	"doorProject/internal/service"
-
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 )
 
 type AppointmentHandler struct {
-	service *service.AppointmentService
+	service   *service.AppointmentService
+	validator *validator.Validate
 }
 
-func NewAppointmentHandler(service *service.AppointmentService) *AppointmentHandler {
+func NewAppointmentHandler(service *service.AppointmentService, validator *validator.Validate) *AppointmentHandler {
 	return &AppointmentHandler{
-		service: service,
+		service:   service,
+		validator: validator,
 	}
 }
 
-// GetFreeSlots @Summary Получить свободные слоты
-// @Description Возвращает доступные временные интервалы для записи
-// @Tags Записи
-// @Param worker_id query int true "ID мастера"
-// @Param date query string true "Дата (ГГГГ-ММ-ДД)"
-// @Success 200 {array} models.TimeSlot
-// @Router /slots [get]
-func (h *AppointmentHandler) GetFreeSlots(c echo.Context) error {
-	// Парсим параметры
-	workerID, err := parseUintParam(c, "worker_id")
+func (h *AppointmentHandler) GetFreeSlotsHandler(ctx echo.Context) error {
+
+	workerID, err := strconv.ParseUint(ctx.Param("worker_id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, errorResponse("неверный ID мастера"))
+		return ctx.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	date, err := time.Parse("2006-01-02", c.QueryParam("date"))
+	serviceID, err := strconv.ParseUint(ctx.Param("service_id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, errorResponse("неверный формат даты"))
+		return ctx.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	// Получаем слоты
-	slots, err := h.service.GetFreeSlots(workerID, date)
+	dayStr := ctx.QueryParam("day")
+	if dayStr == "" {
+		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "day parameter is required"})
+	}
+
+	day, err := time.Parse("2006-01-02T15:04:05Z07:00", dayStr)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, errorResponse(err.Error()))
+		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, slots)
-}
+	slots := h.service.GetAppointmentSlots(day, uint(workerID), uint(serviceID))
 
-func parseUintParam(c echo.Context, param string) (uint, error) {
-	query := c.Param(param)
-	masterId, err := strconv.ParseInt(query, 10, 32)
-	if err != nil {
-		return 0, err
-	}
-	return uint(masterId), nil
-}
-
-func errorResponse(msg string) map[string]interface{} {
-	return map[string]interface{}{
-		"error": msg,
-	}
+	return ctx.JSON(http.StatusOK, slots)
 }

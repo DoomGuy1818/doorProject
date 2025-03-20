@@ -7,5 +7,5 @@ import (
 
 type AppointmentRepository interface {
 	Create(appointment *models.Appointment) error
-	GetByWorkerAndDate(workerId uint, date time.Time) ([]models.Appointment, error)
+	FindAppointmentsByDay(date time.Time) ([]models.Appointment, error)
 }

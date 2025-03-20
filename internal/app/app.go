@@ -73,12 +73,11 @@ func Init() {
 
 	appointmentRepository := psqlRepository.NewAppointmentRepository(configuredDB.Database)
 	appointmentService := service.NewAppointmentService(
-		workerRepository,
 		workerCalendarRepository,
 		appointmentRepository,
-		54000000000,
+		serviceRepository,
 	)
-	appointmentHandlers := handlers.NewAppointmentHandler(appointmentService)
+	appointmentHandlers := handlers.NewAppointmentHandler(appointmentService, v)
 	appointmentRoutes := routes.NewAppointmentRoutes(appointmentHandlers)
 
 	manyRoutes := v1.NewRoutes(
