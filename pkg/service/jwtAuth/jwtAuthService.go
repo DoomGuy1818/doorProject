@@ -3,6 +3,7 @@ package jwtAuth
 import (
 	"doorProject/internal/domain/models"
 	"doorProject/pkg/config"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -15,8 +16,8 @@ type AuthService struct {
 	refreshTokenCookieName     string
 	jwtSecret                  string
 	jwtRefreshSecret           string
-	AccessTokenExpirationTime  int
-	RefreshTokenExpirationTime int
+	accessTokenExpirationTime  int
+	refreshTokenExpirationTime int
 }
 
 func NewJWTAuthService(
@@ -25,37 +26,45 @@ func NewJWTAuthService(
 	jwtSecret string,
 	jwtRefreshSecret string,
 	tokenExpirationTime int,
+	refreshTokenExpirationTime int,
 ) *AuthService {
 	return &AuthService{
-		accessTokenCookieName:     accessTokenCookieName,
-		refreshTokenCookieName:    refreshTokenCookieName,
-		jwtSecret:                 jwtSecret,
-		jwtRefreshSecret:          jwtRefreshSecret,
-		AccessTokenExpirationTime: tokenExpirationTime,
+		accessTokenCookieName:      accessTokenCookieName,
+		refreshTokenCookieName:     refreshTokenCookieName,
+		jwtSecret:                  jwtSecret,
+		jwtRefreshSecret:           jwtRefreshSecret,
+		accessTokenExpirationTime:  tokenExpirationTime,
+		refreshTokenExpirationTime: refreshTokenExpirationTime,
 	}
 }
 
-func (a *AuthService) GenerateTokenAndSetCookie(worker *models.Worker, c echo.Context) error {
+func (a *AuthService) GenerateTokenAndSetCookie(worker *models.Worker, c echo.Context) (string, error) {
 	accessToken, exp, err := a.generateAccessToken(worker)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	a.setTokenCookie(accessToken, exp, c)
+	fmt.Println(a.accessTokenCookieName)
+	fmt.Println(a.refreshTokenCookieName)
+	fmt.Println(a.jwtSecret)
+
+	a.setTokenCookie(a.accessTokenCookieName, accessToken, exp, c)
 
 	refreshToken, exp, err := a.generateRefreshToken(worker)
 	if err != nil {
-		return err
+		return "", err
 	}
-	a.setTokenCookie(refreshToken, exp, c)
+	a.setTokenCookie(a.refreshTokenCookieName, refreshToken, exp, c)
 
-	return nil
+	return refreshToken, nil
 }
 
-// Нужен для редиректа
-
-func JWTErrorChecker(c echo.Context) error {
-	return c.Redirect(http.StatusMovedPermanently, c.Echo().Reverse("SignIn"))
+func (a *AuthService) JWTErrorChecker(c echo.Context, err error) error {
+	return c.JSON(
+		http.StatusUnauthorized, map[string]string{
+			"message": "Требуется авторизация",
+		},
+	)
 }
 
 func (a *AuthService) TokenRefresherMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
@@ -65,10 +74,13 @@ func (a *AuthService) TokenRefresherMiddleware(next echo.HandlerFunc) echo.Handl
 		}
 
 		u := c.Get("user").(*jwt.Token)
-		claims := u.Claims.(*config.Claims)
+		claims, ok := u.Claims.(*config.Claims) // Теперь работает
+		if !ok {
+			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token format")
+		}
 
 		if time.Unix(claims.ExpiresAt.Unix(), 0).Sub(time.Now()) < 15*time.Minute {
-			rc, err := c.Cookie(a.accessTokenCookieName)
+			rc, err := c.Cookie(a.refreshTokenCookieName)
 			if err != nil {
 				return jwt.ErrSignatureInvalid
 			}
@@ -86,9 +98,13 @@ func (a *AuthService) TokenRefresherMiddleware(next echo.HandlerFunc) echo.Handl
 				}
 
 				if tkn != nil && tkn.Valid {
-					_ = a.GenerateTokenAndSetCookie(
-						&models.Worker{Name: claims.Name}, c,
+					_, err := a.GenerateTokenAndSetCookie(
+						&models.Worker{Name: claims.Name},
+						c,
 					)
+					if err != nil {
+						return next(c)
+					}
 				}
 			}
 		}
@@ -98,18 +114,19 @@ func (a *AuthService) TokenRefresherMiddleware(next echo.HandlerFunc) echo.Handl
 }
 
 func (a *AuthService) generateAccessToken(worker *models.Worker) (string, time.Time, error) {
-	expirationTime := time.Now().Add(time.Duration(a.AccessTokenExpirationTime) * time.Minute)
+	expirationTime := time.Now().Add(time.Duration(a.accessTokenExpirationTime) * time.Minute)
 
 	return a.generateToken(worker, expirationTime, []byte(a.jwtSecret))
 }
 
 func (a *AuthService) setTokenCookie(
+	accessTokenCookieName string,
 	accessToken string,
 	exp time.Time,
 	c echo.Context,
 ) {
 	cookie := new(http.Cookie)
-	cookie.Name = a.accessTokenCookieName
+	cookie.Name = accessTokenCookieName
 	cookie.Value = accessToken
 	cookie.Expires = exp
 	cookie.Path = "/"
@@ -148,7 +165,7 @@ func (a *AuthService) getClaims(worker *models.Worker, expirationTime time.Time)
 }
 
 func (a *AuthService) generateRefreshToken(worker *models.Worker) (string, time.Time, error) {
-	expirationTime := time.Now().Add(time.Duration(a.RefreshTokenExpirationTime) * time.Hour)
+	expirationTime := time.Now().Add(time.Duration(a.refreshTokenExpirationTime) * time.Hour)
 
 	return a.generateToken(worker, expirationTime, []byte(a.jwtRefreshSecret))
 }

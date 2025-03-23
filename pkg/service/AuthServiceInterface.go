@@ -7,6 +7,7 @@ import (
 )
 
 type AuthService interface {
-	GenerateTokenAndSetCookie(user *models.Worker, c echo.Context) error
+	GenerateTokenAndSetCookie(user *models.Worker, c echo.Context) (string, error)
 	TokenRefresherMiddleware(next echo.HandlerFunc) echo.HandlerFunc
+	JWTErrorChecker(c echo.Context, err error) error
 }

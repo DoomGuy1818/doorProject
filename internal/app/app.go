@@ -9,8 +9,10 @@ import (
 	"doorProject/internal/repository/psqlRepository"
 	"doorProject/internal/server"
 	"doorProject/internal/service"
+	"doorProject/pkg/service/jwtAuth"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
@@ -27,9 +29,37 @@ func Init() {
 	e := echo.New()
 	v := validator.New(validator.WithRequiredStructEnabled())
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+	refreshSecret := os.Getenv("JWT_REFRESH_SECRET")
+	accessCookie := os.Getenv("ACCESS_TOKEN_COOKIE_NAME")
+	refreshCookie := os.Getenv("REFRESH_TOKEN_COOKIE_NAME")
+	tokenExpiration, err := strconv.ParseInt(os.Getenv("TOKEN_EXPIRATION_TIME"), 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+	refreshExpiration, err := strconv.ParseInt(os.Getenv("REFRESH_TOKEN_EXPIRATION_TIME"), 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	dbClient := db.NewDatabaseClient(dsn)
 	configuredDB := configs.NewDatabaseConfig(dbClient.GetDBClient())
 	configuredDB.SetupDb()
+
+	authService := jwtAuth.NewJWTAuthService(
+		accessCookie,
+		refreshCookie,
+		jwtSecret,
+		refreshSecret,
+		int(tokenExpiration),
+		int(refreshExpiration),
+	)
+
+	jwtConfig := &configs.MiddlewareConfig{
+		SigningKey:   []byte(jwtSecret),
+		TokenLookup:  "cookie:access-token",
+		ErrorHandler: authService.JWTErrorChecker,
+	}
 
 	productRepository := psqlRepository.NewProductRepository(configuredDB.Database)
 	productService := service.NewProductService(productRepository)
@@ -54,7 +84,7 @@ func Init() {
 	workerCalendarRepository := psqlRepository.NewWorkerCalendarRepository(configuredDB.Database)
 	workerCalendarService := service.NewWorkerCalendar(workerCalendarRepository)
 	workerCalendarHandlers := handlers.NewWorkerCalendarHandlers(workerCalendarService, v)
-	workerCalendarRoutes := routes.NewWorkerCalendar(workerCalendarHandlers)
+	workerCalendarRoutes := routes.NewWorkerCalendar(workerCalendarHandlers, jwtConfig, authService)
 
 	clientRepository := psqlRepository.NewClientRepository(configuredDB.Database)
 	clientService := service.NewClientService(clientRepository)
@@ -80,6 +110,9 @@ func Init() {
 	appointmentHandlers := handlers.NewAppointmentHandler(appointmentService, v)
 	appointmentRoutes := routes.NewAppointmentRoutes(appointmentHandlers)
 
+	authHandlers := handlers.NewAuthHandlers(authService, workerRepository)
+	authRoutes := routes.NewAuthRoutes(authHandlers)
+
 	manyRoutes := v1.NewRoutes(
 		productRoutes,
 		colorRoutes,
@@ -90,6 +123,7 @@ func Init() {
 		serviceRoutes,
 		cartRoutes,
 		appointmentRoutes,
+		authRoutes,
 		e,
 	)
 
