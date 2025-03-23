@@ -21,3 +21,12 @@ func (w WorkerRepository) Create(worker *models.Worker) error {
 
 	return nil
 }
+
+func (w WorkerRepository) FindUserByUsername(username string) (*models.Worker, error) {
+	var worker models.Worker
+	if err := w.db.Where("login = ?", username).First(&worker).Error; err != nil {
+		return nil, err
+	}
+
+	return &worker, nil
+}

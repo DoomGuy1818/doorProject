@@ -19,6 +19,15 @@ func NewWorkerService(workerRepository repository.WorkerRepositoryInterface) *Wo
 	}
 }
 
+func (w WorkerService) GetUser(signIn *dto.SignInDto) (*models.Worker, error) {
+	worker, err := w.workerRepository.FindUserByUsername(signIn.Username)
+	if err != nil {
+		return nil, err
+	}
+
+	return worker, nil
+}
+
 func (w WorkerService) CreateWorker(dto *dto.WorkerDTO) (*models.Worker, error) {
 	passwordHash := generatePasswordHash(dto.Password)
 
@@ -29,7 +38,7 @@ func (w WorkerService) CreateWorker(dto *dto.WorkerDTO) (*models.Worker, error) 
 
 	worker := models.Worker{
 		Name:     dto.Name,
-		Password: dto.Password,
+		Password: passwordHash,
 		Login:    dto.Email,
 	}
 
