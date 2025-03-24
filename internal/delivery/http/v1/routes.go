@@ -59,5 +59,5 @@ func (r *Routes) InitRoutes() {
 	r.cart.CreateCart(r.echo)
 	r.appointment.GetFreeSlots(r.echo)
 	r.appointment.CreateAppointments(r.echo)
-	r.auth.SighIn(r.echo)
+	r.auth.AuthRoutes(r.echo)
 }

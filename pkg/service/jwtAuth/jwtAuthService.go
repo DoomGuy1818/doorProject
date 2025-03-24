@@ -3,7 +3,6 @@ package jwtAuth
 import (
 	"doorProject/internal/domain/models"
 	"doorProject/pkg/config"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -44,10 +43,6 @@ func (a *AuthService) GenerateTokenAndSetCookie(worker *models.Worker, c echo.Co
 		return "", err
 	}
 
-	fmt.Println(a.accessTokenCookieName)
-	fmt.Println(a.refreshTokenCookieName)
-	fmt.Println(a.jwtSecret)
-
 	a.setTokenCookie(a.accessTokenCookieName, accessToken, exp, c)
 
 	refreshToken, exp, err := a.generateRefreshToken(worker)
@@ -56,7 +51,7 @@ func (a *AuthService) GenerateTokenAndSetCookie(worker *models.Worker, c echo.Co
 	}
 	a.setTokenCookie(a.refreshTokenCookieName, refreshToken, exp, c)
 
-	return refreshToken, nil
+	return accessToken, nil
 }
 
 func (a *AuthService) JWTErrorChecker(c echo.Context, err error) error {
@@ -74,7 +69,7 @@ func (a *AuthService) TokenRefresherMiddleware(next echo.HandlerFunc) echo.Handl
 		}
 
 		u := c.Get("user").(*jwt.Token)
-		claims, ok := u.Claims.(*config.Claims) // Теперь работает
+		claims, ok := u.Claims.(*config.Claims)
 		if !ok {
 			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token format")
 		}
@@ -87,7 +82,8 @@ func (a *AuthService) TokenRefresherMiddleware(next echo.HandlerFunc) echo.Handl
 
 			if rc != nil && err == nil {
 				tkn, err := jwt.ParseWithClaims(
-					rc.Value, &config.Claims{},
+					rc.Value,
+					claims,
 					func(token *jwt.Token) (interface{}, error) {
 						return []byte(a.jwtRefreshSecret), nil
 					},
