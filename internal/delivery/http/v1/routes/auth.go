@@ -18,7 +18,5 @@ func NewAuthRoutes(authHandler *handlers.AuthHandlers) *AuthRoutes {
 
 func (r *AuthRoutes) AuthRoutes(e *echo.Echo) {
 	e.POST("auth/signin", r.authHandler.SignIn)
-	//e.POST("auth/signout", r.authHandler.SignOut)
-	//e.POST("auth/register", r.authHandler.Register)
-	//e.POST("auth/refresh", r.authHandler.Refresh)
+	e.POST("auth/register", r.authHandler.Register)
 }

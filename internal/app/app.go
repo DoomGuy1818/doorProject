@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"doorProject/internal/config/configs"
 	"doorProject/internal/db"
 	"doorProject/internal/delivery/http/v1"
@@ -9,7 +10,12 @@ import (
 	"doorProject/internal/repository/psqlRepository"
 	"doorProject/internal/server"
 	"doorProject/internal/service"
+	"doorProject/pkg/config"
+	messageHandlerService "doorProject/pkg/service"
+	"doorProject/pkg/service/QueueHandlers"
+	"doorProject/pkg/service/QueueManager"
 	"doorProject/pkg/service/jwtAuth"
+	"doorProject/pkg/service/smtpSender"
 	"log"
 	"os"
 	"strconv"
@@ -41,6 +47,9 @@ func Init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	redisDsn := os.Getenv("REDIS_URL")
+	mailhogClient := os.Getenv("MAILER_DSN")
+	smtpFrom := os.Getenv("MAILER_FROM")
 
 	dbClient := db.NewDatabaseClient(dsn)
 	configuredDB := configs.NewDatabaseConfig(dbClient.GetDBClient())
@@ -60,6 +69,23 @@ func Init() {
 		TokenLookup:  "cookie:access-token",
 		ErrorHandler: authService.JWTErrorChecker,
 	}
+
+	redisClient := config.NewRedisClient(redisDsn)
+	smtpClient := smtpSender.NewMailhogClient(mailhogClient, smtpFrom)
+	mailSender := smtpSender.NewSenderService(smtpClient)
+
+	subHandlers := make(map[string]messageHandlerService.MessageHandlerInterface)
+	subscriber := QueueManger.NewRedisSubscriber(redisClient, subHandlers)
+
+	emailSenderHandler := QueueHandlers.NewEmailSenderHandler(redisClient, mailSender)
+
+	subscriber.RegisterHandler("sendEmail", emailSenderHandler)
+
+	ctx := context.Background()
+	topics := []string{"sendEmail"}
+	subscriber.ConsumeMessages(ctx, topics)
+
+	publisher := QueueManger.NewRedisPublisher(redisClient)
 
 	productRepository := psqlRepository.NewProductRepository(configuredDB.Database)
 	productService := service.NewProductService(productRepository)
@@ -110,7 +136,7 @@ func Init() {
 	appointmentHandlers := handlers.NewAppointmentHandler(appointmentService, v)
 	appointmentRoutes := routes.NewAppointmentRoutes(appointmentHandlers)
 
-	authHandlers := handlers.NewAuthHandlers(authService, workerRepository)
+	authHandlers := handlers.NewAuthHandlers(authService, workerRepository, publisher)
 	authRoutes := routes.NewAuthRoutes(authHandlers)
 
 	manyRoutes := v1.NewRoutes(
