@@ -136,7 +136,7 @@ func Init() {
 	appointmentHandlers := handlers.NewAppointmentHandler(appointmentService, v)
 	appointmentRoutes := routes.NewAppointmentRoutes(appointmentHandlers)
 
-	authHandlers := handlers.NewAuthHandlers(authService, workerRepository, publisher)
+	authHandlers := handlers.NewAuthHandlers(authService, workerService, publisher)
 	authRoutes := routes.NewAuthRoutes(authHandlers)
 
 	manyRoutes := v1.NewRoutes(

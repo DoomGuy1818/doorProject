@@ -48,6 +48,22 @@ func (w WorkerService) CreateWorker(dto *dto.WorkerDTO) (*models.Worker, error) 
 	return &worker, err
 }
 
+func (w WorkerService) UpdateWorkerStatus(login string, status bool) (*models.Worker, error) {
+	worker, err := w.workerRepository.FindUserByUsername(login)
+	if err != nil {
+		return nil, err
+	}
+
+	worker.IsActive = status
+
+	err = w.workerRepository.UpdateWorkerStatus(worker)
+	if err != nil {
+		return nil, err
+	}
+
+	return worker, nil
+}
+
 func generatePasswordHash(password string) string {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	if err != nil {

@@ -1,6 +1,9 @@
 package smtpSender
 
-import "net/smtp"
+import (
+	"fmt"
+	"net/smtp"
+)
 
 type MailSenderService struct {
 	client *MailhogClient
@@ -14,7 +17,7 @@ func NewSenderService(client *MailhogClient) *MailSenderService {
 
 func (m *MailSenderService) SendMessage(receiver string) error {
 	subject := "Subject: Аутентификация"
-	body := "Здравствуйте! Перейдите по ссылке, чтобы подтвердить аккаунт"
+	body := fmt.Sprintf("Здравствуйте! http://localhost:9991/auth/verify?email=%s&status=true", receiver)
 	message := []byte(subject + "\n" + body)
 	to := []string{receiver}
 

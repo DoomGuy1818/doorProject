@@ -3,27 +3,28 @@ package handlers
 import (
 	"context"
 	"doorProject/internal/delivery/http/v1/handlers/dto"
-	"doorProject/internal/repository"
+	service2 "doorProject/internal/service"
 	"doorProject/pkg/service"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthHandlers struct {
-	auth       service.AuthService
-	workerRepo repository.WorkerRepositoryInterface
-	publisher  service.MessagePublisherInterface
+	auth          service.AuthService
+	workerService service2.WorkerService
+	publisher     service.MessagePublisherInterface
 }
 
 func NewAuthHandlers(
 	auth service.AuthService,
-	w repository.WorkerRepositoryInterface,
+	w service2.WorkerService,
 	publisher service.MessagePublisherInterface,
 ) *AuthHandlers {
-	return &AuthHandlers{auth: auth, workerRepo: w, publisher: publisher}
+	return &AuthHandlers{auth: auth, workerService: w, publisher: publisher}
 }
 
 func (h *AuthHandlers) SignIn(c echo.Context) error {
@@ -33,7 +34,7 @@ func (h *AuthHandlers) SignIn(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	worker, err := h.workerRepo.FindUserByUsername(credDto.Username)
+	worker, err := h.workerService.GetUser(credDto)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -78,4 +79,20 @@ func (h *AuthHandlers) Register(c echo.Context) error {
 	h.publisher.PublishMessage(ctx, registerDto.Login, "sendEmail")
 
 	return echo.NewHTTPError(http.StatusCreated, "successfully registered. Check your email")
+}
+
+func (h *AuthHandlers) VerifyAccount(c echo.Context) error {
+	email := c.QueryParam("email")
+
+	status, err := strconv.ParseBool(c.QueryParam("status"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	worker, err := h.workerService.UpdateWorkerStatus(email, status)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{"worker": worker})
 }
