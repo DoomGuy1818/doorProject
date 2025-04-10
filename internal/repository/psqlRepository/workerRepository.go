@@ -31,6 +31,14 @@ func (w *WorkerRepository) FindUserByUsername(username string) (*models.Worker, 
 	return &worker, nil
 }
 
+func (w *WorkerRepository) FindUserById(userID uint) (*models.Worker, error) {
+	var worker models.Worker
+	if err := w.db.Where("id = ?", userID).First(&worker).Error; err != nil {
+		return nil, err
+	}
+	return &worker, nil
+}
+
 func (w *WorkerRepository) UpdateWorkerStatus(worker *models.Worker) error {
 
 	err := w.db.Save(worker).Error

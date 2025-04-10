@@ -12,4 +12,5 @@ type Worker struct {
 	IsActive     bool   `json:"is_active" default:"false"`
 	WorkDays     []WorkerCalendar
 	Appointments []Appointment
+	UserToken    []UserToken
 }

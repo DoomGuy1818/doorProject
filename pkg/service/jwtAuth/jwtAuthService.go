@@ -2,6 +2,7 @@ package jwtAuth
 
 import (
 	"doorProject/internal/domain/models"
+	"doorProject/internal/repository"
 	"doorProject/pkg/config"
 	"net/http"
 	"time"
@@ -17,6 +18,8 @@ type AuthService struct {
 	jwtRefreshSecret           string
 	accessTokenExpirationTime  int
 	refreshTokenExpirationTime int
+	tokenRepo                  repository.RefreshTokenRepository
+	workerRepo                 repository.WorkerRepositoryInterface
 }
 
 func NewJWTAuthService(
@@ -26,6 +29,8 @@ func NewJWTAuthService(
 	jwtRefreshSecret string,
 	tokenExpirationTime int,
 	refreshTokenExpirationTime int,
+	r repository.RefreshTokenRepository,
+	w repository.WorkerRepositoryInterface,
 ) *AuthService {
 	return &AuthService{
 		accessTokenCookieName:      accessTokenCookieName,
@@ -34,6 +39,8 @@ func NewJWTAuthService(
 		jwtRefreshSecret:           jwtRefreshSecret,
 		accessTokenExpirationTime:  tokenExpirationTime,
 		refreshTokenExpirationTime: refreshTokenExpirationTime,
+		tokenRepo:                  r,
+		workerRepo:                 w,
 	}
 }
 
@@ -46,10 +53,53 @@ func (a *AuthService) GenerateTokenAndSetCookie(worker *models.Worker, c echo.Co
 	a.setTokenCookie(a.accessTokenCookieName, accessToken, exp, c)
 
 	refreshToken, exp, err := a.generateRefreshToken(worker)
+
 	if err != nil {
 		return "", err
 	}
+
+	refreshTokenModel := &models.UserToken{
+		ExpiredAt: exp,
+		WorkerID:  worker.ID,
+		TokenHash: refreshToken,
+		IsValid:   true,
+	}
+
+	err = a.tokenRepo.CreateRefreshToken(refreshTokenModel)
+	if err != nil {
+		return "", err
+	}
+
 	a.setTokenCookie(a.refreshTokenCookieName, refreshToken, exp, c)
+
+	return accessToken, nil
+}
+
+func (a *AuthService) RefreshAccessToken(c echo.Context) (string, error) {
+	rc, err := c.Cookie(a.refreshTokenCookieName)
+	if err != nil {
+		return "", err
+	}
+
+	token, err := a.tokenRepo.FindRefreshTokenByToken(rc.Value)
+	if err != nil {
+		return "", err
+	}
+
+	w, err := a.workerRepo.FindUserById(token.WorkerID)
+	if err != nil {
+		return "", err
+	}
+
+	err = a.tokenRepo.InvalidateRefreshToken(token)
+	if err != nil {
+		return "", err
+	}
+
+	accessToken, err := a.GenerateTokenAndSetCookie(w, c)
+	if err != nil {
+		return "", err
+	}
 
 	return accessToken, nil
 }
@@ -60,53 +110,6 @@ func (a *AuthService) JWTErrorChecker(c echo.Context, err error) error {
 			"message": "Требуется авторизация",
 		},
 	)
-}
-
-func (a *AuthService) TokenRefresherMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		if c.Get("user") == nil {
-			return next(c)
-		}
-
-		u := c.Get("user").(*jwt.Token)
-		claims, ok := u.Claims.(*config.Claims)
-		if !ok {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token format")
-		}
-
-		if time.Unix(claims.ExpiresAt.Unix(), 0).Sub(time.Now()) < 15*time.Minute {
-			rc, err := c.Cookie(a.refreshTokenCookieName)
-			if err != nil {
-				return jwt.ErrSignatureInvalid
-			}
-
-			if rc != nil && err == nil {
-				tkn, err := jwt.ParseWithClaims(
-					rc.Value,
-					claims,
-					func(token *jwt.Token) (interface{}, error) {
-						return []byte(a.jwtRefreshSecret), nil
-					},
-				)
-
-				if err != nil {
-					return jwt.ErrSignatureInvalid
-				}
-
-				if tkn != nil && tkn.Valid {
-					_, err := a.GenerateTokenAndSetCookie(
-						&models.Worker{Name: claims.Name},
-						c,
-					)
-					if err != nil {
-						return next(c)
-					}
-				}
-			}
-		}
-
-		return next(c)
-	}
 }
 
 func (a *AuthService) generateAccessToken(worker *models.Worker) (string, time.Time, error) {

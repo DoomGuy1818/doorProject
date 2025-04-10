@@ -32,7 +32,6 @@ func NewWorkerCalendar(
 func (wc *WorkerCalendar) WorkCalendarRoutes(echo *echo.Echo) {
 	protectedGroup := echo.Group("/workday")
 	protectedGroup.Use(wc.setupJWTConfig())
-	protectedGroup.Use(wc.authService.TokenRefresherMiddleware)
 
 	protectedGroup.POST("", wc.handler.CreateWorkDay)
 }

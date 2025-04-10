@@ -55,6 +55,9 @@ func Init() {
 	configuredDB := configs.NewDatabaseConfig(dbClient.GetDBClient())
 	configuredDB.SetupDb()
 
+	tokenRepo := psqlRepository.NewRefreshTokenRepository(configuredDB.Database)
+	workerRepository := psqlRepository.NewWorkerRepository(configuredDB.Database)
+
 	authService := jwtAuth.NewJWTAuthService(
 		accessCookie,
 		refreshCookie,
@@ -62,6 +65,8 @@ func Init() {
 		refreshSecret,
 		int(tokenExpiration),
 		int(refreshExpiration),
+		tokenRepo,
+		workerRepository,
 	)
 
 	jwtConfig := &configs.MiddlewareConfig{
@@ -102,7 +107,6 @@ func Init() {
 	categoryHandler := handlers.NewCategoryHandler(categoryService, v)
 	categoryRoutes := routes.NewCategoryRoute(categoryHandler)
 
-	workerRepository := psqlRepository.NewWorkerRepository(configuredDB.Database)
 	workerService := *service.NewWorkerService(workerRepository)
 	workerHandlers := handlers.NewWorkerHandlers(workerService, *v)
 	workerRoutes := routes.NewWorkerRoutes(*workerHandlers)
