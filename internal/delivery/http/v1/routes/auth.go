@@ -20,4 +20,5 @@ func (r *AuthRoutes) AuthRoutes(e *echo.Echo) {
 	e.POST("auth/signin", r.authHandler.SignIn)
 	e.POST("auth/register", r.authHandler.Register)
 	e.GET("auth/verify", r.authHandler.VerifyAccount)
+	e.POST("auth/refresh", r.authHandler.Refresh)
 }

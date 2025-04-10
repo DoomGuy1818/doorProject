@@ -96,3 +96,12 @@ func (h *AuthHandlers) VerifyAccount(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, echo.Map{"worker": worker})
 }
+
+func (h *AuthHandlers) Refresh(c echo.Context) error {
+	access, err := h.auth.RefreshAccessToken(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{"access-token": access})
+}

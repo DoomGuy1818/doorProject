@@ -32,6 +32,7 @@ func (database DatabaseConfig) SetupDb() {
 		&models.Product{},
 		&models.Appointment{},
 		&models.WorkerCalendar{},
+		&models.UserToken{},
 	)
 	if err != nil {
 		log.Fatal(err)
